@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STE MIST PARK SARL</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- En-tête -->
+  <header>
+    <div class="header-content">
+      <img src="logo.jpg" alt="Logo STE MIST PARK SARL" class="logo">
+      <h1>STE MIST PARK SARL</h1>
+      <img src="logoright.jpg" alt="Logo STE MIST PARK SARL" class="logoright">
+    </div>
+    <button onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+  </header>
+
+  <!-- Écran de connexion -->
+  <div id="loginScreen">
+    <div class="login-container">
+      <h2><i class="fas fa-user-circle"></i> Connexion</h2>
+      <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+      <input type="password" id="password" placeholder="Mot de passe" required>
+      <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Se connecter</button>
+      <div id="loadingSpinner" style="display:none;"><i class="fas fa-spinner fa-spin"></i></div>
+      <p id="loginError"></p>
+    </div>
+  </div>
+
+  <!-- Contenu principal de l'application -->
+  <div id="appContent" style="display:none;">
+    <!-- Navigation -->
+    <nav>
+      <button class="tab-btn active" data-tab="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
+      <button class="tab-btn" data-tab="drivers"><i class="fas fa-users"></i> Chauffeurs</button>
+      <button class="tab-btn" data-tab="fuel"><i class="fas fa-gas-pump"></i> Carburant</button>
+      <button onclick="exportCSV()"><i class="fas fa-file-export"></i> Export CSV</button>
+    </nav>
+
+    <!-- Tableau de bord -->
+    <section id="dashboard" class="tab-content active">
+      <h2><i class="fas fa-tachometer-alt"></i> Tableau de Bord</h2>
+      <div class="stats-container">
+        <div class="stat-card">
+          <h3><i class="fas fa-users"></i> Nombre de chauffeurs</h3>
+          <p id="driverCount">0</p>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-gas-pump"></i> Total ravitaillements</h3>
+          <p id="fuelCount">0</p>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-clock"></i> Dernier ravitaillement</h3>
+          <p id="lastRefuel">-</p>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-gas-pump"></i> Consommation Moyenne</h3>
+          <p id="avgConsumption">0 L/100km</p>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-tachometer-alt"></i> KM Moyens</h3>
+          <p id="avgKilometers">0 km</p>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-money-bill-wave"></i> Coût Moyen</h3>
+          <p id="avgCost">0 €</p>
+        </div>
+      </div>
+      
+      <div class="charts-container">
+        <div class="chart-wrapper">
+          <canvas id="fuelChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="consumptionChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Chauffeurs -->
+    <section id="drivers" class="tab-content">
+      <h2><i class="fas fa-users"></i> Gestion des Chauffeurs</h2>
+
+      <div class="form-container">
+        <div class="form-row">
+          <label for="chauffeurNom"><i class="fas fa-user"></i> Nom du chauffeur</label>
+          <input type="text" id="chauffeurNom">
+        </div>
+
+        <div class="form-row">
+          <label for="numeroPermis"><i class="fas fa-id-card"></i> Numéro de permis</label>
+          <input type="text" id="numeroPermis">
+        </div>
+
+        <div class="form-row">
+          <label for="categoriePermis"><i class="fas fa-car"></i> Catégories de permis</label>
+          <select id="categoriePermis" multiple>
+            <option value="AM">AM</option>
+            <option value="A1">A1</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="EB">EB</option>
+            <option value="EC">EC</option>
+            <option value="ED">ED</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="numeroCartePro"><i class="fas fa-address-card"></i> Numéro de la carte professionnelle</label>
+          <input type="text" id="numeroCartePro">
+        </div>
+
+        <div class="form-row">
+          <label for="dateDebutCartePro"><i class="fas fa-calendar-alt"></i> Date début carte pro</label>
+          <input type="date" id="dateDebutCartePro">
+        </div>
+
+        <div class="form-row">
+          <label for="dateFinCartePro"><i class="fas fa-calendar-alt"></i> Date fin carte pro</label>
+          <input type="date" id="dateFinCartePro">
+        </div>
+
+        <div class="form-row">
+          <label for="vehiculeAssocie"><i class="fas fa-truck"></i> Véhicule associé</label>
+          <input type="text" id="vehiculeAssocie">
+        </div>
+
+        <button id="submitChauffeur" onclick="ajouterOuModifierChauffeur()"><i class="fas fa-save"></i> Enregistrer</button>
+      </div>
+
+      <div class="table-container">
+        <table id="chauffeurTable">
+          <thead>
+            <tr>
+              <th><i class="fas fa-user"></i> Nom</th>
+              <th><i class="fas fa-id-card"></i> Permis</th>
+              <th><i class="fas fa-car"></i> Catégories</th>
+              <th><i class="fas fa-address-card"></i> Carte Pro</th>
+              <th><i class="fas fa-calendar-alt"></i> Début</th>
+              <th><i class="fas fa-calendar-alt"></i> Fin</th>
+              <th><i class="fas fa-truck"></i> Véhicule</th>
+              <th><i class="fas fa-cog"></i> Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section Carburant -->
+    <section id="fuel" class="tab-content">
+      <h2><i class="fas fa-gas-pump"></i> Gestion du Carburant</h2>
+      
+      <div class="filter-container">
+        <label for="fuelDriverFilter"><i class="fas fa-filter"></i> Filtrer par chauffeur:</label>
+        <select id="fuelDriverFilter" onchange="filterFuelLogs()">
+          <option value="">-- Tous les chauffeurs --</option>
+        </select>
+      </div>
+
+      <div class="form-container">
+        <form id="fuelLogForm">
+          <div class="form-row">
+            <label for="fuelDateTime"><i class="fas fa-calendar-alt"></i> Date et Heure</label>
+            <input type="datetime-local" id="fuelDateTime" required>
+          </div>
+          
+          <div class="form-row">
+            <label for="matricule"><i class="fas fa-car"></i> Matricule</label>
+            <input type="text" id="matricule" placeholder="Matricule" required>
+          </div>
+          
+          <div class="form-row">
+            <label for="kilometers"><i class="fas fa-tachometer-alt"></i> Kilométrage</label>
+            <input type="number" id="kilometers" placeholder="KM" required>
+          </div>
+          
+          <div class="form-row">
+            <label for="fuelQty"><i class="fas fa-gas-pump"></i> Quantité (L)</label>
+            <input type="number" id="fuelQty" placeholder="QT/L" required step="0.01">
+          </div>
+          
+          <div class="form-row">
+            <label for="pricePerLiter"><i class="fas fa-euro-sign"></i> Prix/Litre (€)</label>
+            <input type="number" id="pricePerLiter" placeholder="Prix/Litre" required step="0.01">
+          </div>
+          
+          <div class="form-row">
+            <label for="trajet"><i class="fas fa-route"></i> Trajet</label>
+            <input type="text" id="trajet" placeholder="Trajet" required>
+          </div>
+          
+          <div class="form-row">
+            <label for="containerNum"><i class="fas fa-box"></i> Num TC</label>
+            <input type="text" id="containerNum" placeholder="Num TC">
+          </div>
+          
+          <div class="form-row">
+            <label for="fuelNotes"><i class="fas fa-sticky-note"></i> Notes</label>
+            <textarea id="fuelNotes" placeholder="Notes"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <label for="tireChangeDate"><i class="fas fa-tire"></i> Date changement pneus</label>
+            <input type="date" id="tireChangeDate">
+          </div>
+
+          <button type="submit"><i class="fas fa-save"></i> Enregistrer</button>
+        </form>
+      </div>
+
+      <div class="table-container">
+        <table id="fuelLogTable">
+          <thead>
+            <tr>
+              <th><i class="fas fa-calendar-alt"></i> Date/Heure</th>
+              <th><i class="fas fa-car"></i> Matricule</th>
+              <th><i class="fas fa-tachometer-alt"></i> KM</th>
+              <th><i class="fas fa-gas-pump"></i> QT (L)</th>
+              <th><i class="fas fa-euro-sign"></i> Prix (€)</th>
+              <th><i class="fas fa-route"></i> Trajet</th>
+              <th><i class="fas fa-tire"></i> Pneus</th>
+              <th><i class="fas fa-cog"></i> Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
